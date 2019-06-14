@@ -15,6 +15,7 @@ import (
 //singleSize 单个文件大小限制
 func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		unix := time.Now().Unix()
 		response := new(common.BaseResponse)
 		response.Code = common.ResponseError
 		response.Msg = "上传失败"
@@ -82,7 +83,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			fmt.Println("dir:", dir, " fileName", fileName)
 			//校验单个文件大小
 			if singleSize < fileHeader.Size {
-				response.Msg = fmt.Sprintf("key:%s 单文件大小超出限制 %d%s", k, singleSize/1024, "KB")
+				response.Msg = fmt.Sprintf("key:%s 单文件大小超出限制 %dKB 当前文件大小:%d KB ", k, singleSize/1024, fileHeader.Size/1024)
 				Render(w, *response)
 				return
 			}
@@ -96,7 +97,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			}
 			if exists {
 				//存在同名文件处理 拼接时间戳
-				filePath = fmt.Sprintf("%s/%d%s", dir, time.Now().Unix(), fileName)
+				filePath = fmt.Sprintf("%s/%d%s", dir, time.Now().UnixNano(), fileName)
 			}
 			fmt.Println("filePath:", filePath)
 			newFile, dirError := os.Create(fmt.Sprintf("%s%s", rootPath, filePath))
@@ -127,6 +128,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 		response.Data = dataMap
 		response.Msg = "文件上传成功！"
 		Render(w, *response)
+		fmt.Printf("上传耗时:%d ms", time.Now().Unix()-unix)
 	})
 }
 
