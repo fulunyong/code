@@ -18,9 +18,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 		response := new(common.BaseResponse)
 		response.Code = common.ResponseError
 		response.Msg = "上传失败"
-		fmt.Println(response)
 		dataMap := make(map[string]string)
-		fmt.Println(dataMap)
 		// 校验总文件大小
 		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 		if err := r.ParseMultipartForm(maxSize); err != nil {
@@ -81,7 +79,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			}
 			//文件名称
 			fileName := fileHeader.Filename
-			fmt.Println("fileName:", fileName)
+			fmt.Println("dir:", dir, " fileName", fileName)
 			//校验单个文件大小
 			if singleSize < fileHeader.Size {
 				response.Msg = fmt.Sprintf("key:%s 单文件大小超出限制 %d%s", k, singleSize/1024, "KB")
@@ -100,6 +98,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				//存在同名文件处理 拼接时间戳
 				filePath = fmt.Sprintf("%s/%d%s", dir, time.Now().Unix(), fileName)
 			}
+			fmt.Println("filePath:", filePath)
 			newFile, dirError := os.Create(fmt.Sprintf("%s%s", rootPath, filePath))
 			if dirError != nil {
 				response.Msg = fmt.Sprintf("创建文件失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
