@@ -15,7 +15,7 @@ import (
 //singleSize 单个文件大小限制
 func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		unix := time.Now().Unix()
+		unixNano := time.Now().UnixNano()
 		response := new(common.BaseResponse)
 		response.Code = common.ResponseError
 		response.Msg = "上传失败"
@@ -123,7 +123,8 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				dataMap[k] = filePath
 			}
 		}
-		fmt.Printf("上传耗时:%d ms", time.Now().Unix()-unix)
+		nano := time.Now().UnixNano()
+		fmt.Printf("上传耗时:%d ns %d %d \n", nano-unixNano, unixNano, nano)
 		response.Code = common.ResponseOK
 		response.Data = dataMap
 		response.Msg = "文件上传成功！"
