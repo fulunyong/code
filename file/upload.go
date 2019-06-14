@@ -1,6 +1,7 @@
 package file
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/fulunyong/code/common"
 	"io/ioutil"
@@ -23,14 +24,14 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 		r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 		if err := r.ParseMultipartForm(maxSize); err != nil {
 			response.Msg = fmt.Sprintf("%s%d%s", "总文件大小超出限制，最大上传限制:", maxSize/1024, "KB")
-			common.Render(w, response)
+			Render(w, *response)
 			return
 		}
 		//判断有没有上传有文件
 		fileForm := r.MultipartForm
 		if fileForm == nil {
 			response.Msg = "当前请求体没有上传文件！"
-			common.Render(w, response)
+			Render(w, *response)
 			return
 		}
 		//前缀路径
@@ -54,14 +55,14 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 		_, dirError := MkdirOnNotExist(fmt.Sprintf("%s%s", rootPath, dir))
 		if dirError != nil {
 			response.Msg = fmt.Sprintf("%s path: %s err:%s", "文件夹创建失败, ", fmt.Sprintf("%s%s", rootPath, dir), dirError.Error())
-			common.Render(w, response)
+			Render(w, *response)
 			return
 		}
 		//判断文件数量是否为0
 		fileHeaders := fileForm.File
 		if 0 == len(fileHeaders) {
 			response.Msg = "当前上传文件数量为0"
-			common.Render(w, response)
+			Render(w, *response)
 			return
 		}
 		//处理文件
@@ -69,12 +70,12 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			file, fileHeader, dirError := r.FormFile(k)
 			if dirError != nil {
 				response.Msg = fmt.Sprintf("%s err:%s", "读取上传的文件失败, ", dirError.Error())
-				common.Render(w, response)
+				Render(w, *response)
 				return
 			}
 			if file == nil || fileHeader == nil {
 				response.Msg = "读取文件流失败！"
-				common.Render(w, response)
+				Render(w, *response)
 				return
 			}
 			//文件名称
@@ -83,7 +84,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			//校验单个文件大小
 			if singleSize < fileHeader.Size {
 				response.Msg = fmt.Sprintf("key:%s 单文件大小超出限制 %d%s", k, singleSize/1024, "KB")
-				common.Render(w, response)
+				Render(w, *response)
 				return
 			}
 			filePath := fmt.Sprintf("%s/%s", dir, fileName)
@@ -91,7 +92,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 			exists, dirError := PathExists(fmt.Sprintf("%s%s", rootPath, filePath))
 			if dirError != nil {
 				response.Msg = fmt.Sprintf("读取文件失败:%s", dirError.Error())
-				common.Render(w, response)
+				Render(w, *response)
 				return
 			}
 			if exists {
@@ -101,18 +102,18 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				newFile, dirError := os.Create(fmt.Sprintf("%s%s", rootPath, filePath))
 				if dirError != nil {
 					response.Msg = fmt.Sprintf("创建文件失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
-					common.Render(w, response)
+					Render(w, *response)
 					return
 				}
 				bytes, _ := ioutil.ReadAll(file)
 				_, dirError = newFile.Write(bytes)
 				if dirError != nil {
 					response.Msg = fmt.Sprintf("文件保存失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
-					common.Render(w, response)
+					Render(w, *response)
 					return
 				}
-				newFile.Close()
-				file.Close()
+				_ = newFile.Close()
+				_ = file.Close()
 
 			}
 			//返回处理
@@ -125,7 +126,7 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 		}
 		response.Code = common.ResponseOK
 		response.Msg = "文件上传成功！"
-		common.Render(w, response)
+		Render(w, *response)
 	})
 }
 
@@ -160,4 +161,11 @@ func PathExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+//统一返回处理
+func Render(w http.ResponseWriter, response common.BaseResponse) {
+	w.WriteHeader(http.StatusOK)
+	bytes, _ := json.Marshal(response)
+	_, _ = w.Write(bytes)
 }
