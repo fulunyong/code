@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-const maxSize = 200 * 1024   // 200 MB
-const singleSize = 20 * 1024 // 20 MB
+const maxSize = 200 * 1024 * 1024   // 200 MB
+const singleSize = 20 * 1024 * 1024 // 20 MB
 const uploadPath = "D:/tmp"
 
 func Test1(t *testing.T) {

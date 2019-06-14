@@ -123,12 +123,11 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				dataMap[k] = filePath
 			}
 		}
-
+		fmt.Printf("上传耗时:%d ms", time.Now().Unix()-unix)
 		response.Code = common.ResponseOK
 		response.Data = dataMap
 		response.Msg = "文件上传成功！"
 		Render(w, *response)
-		fmt.Printf("上传耗时:%d ms", time.Now().Unix()-unix)
 	})
 }
 
