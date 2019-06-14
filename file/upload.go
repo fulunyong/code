@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 )
 
 //rootPath 上传跟目录
@@ -96,26 +97,24 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				return
 			}
 			if exists {
-				//存在同名文件处理
-			} else {
-				//不存在的处理
-				newFile, dirError := os.Create(fmt.Sprintf("%s%s", rootPath, filePath))
-				if dirError != nil {
-					response.Msg = fmt.Sprintf("创建文件失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
-					Render(w, *response)
-					return
-				}
-				bytes, _ := ioutil.ReadAll(file)
-				_, dirError = newFile.Write(bytes)
-				if dirError != nil {
-					response.Msg = fmt.Sprintf("文件保存失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
-					Render(w, *response)
-					return
-				}
-				_ = newFile.Close()
-				_ = file.Close()
-
+				//存在同名文件处理 拼接时间戳
+				filePath = fmt.Sprintf("%s/%d%s", dir, time.Now().Unix(), fileName)
 			}
+			newFile, dirError := os.Create(fmt.Sprintf("%s%s", rootPath, filePath))
+			if dirError != nil {
+				response.Msg = fmt.Sprintf("创建文件失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
+				Render(w, *response)
+				return
+			}
+			bytes, _ := ioutil.ReadAll(file)
+			_, dirError = newFile.Write(bytes)
+			if dirError != nil {
+				response.Msg = fmt.Sprintf("文件保存失败:%s %s", fmt.Sprintf("%s%s", rootPath, filePath), dirError.Error())
+				Render(w, *response)
+				return
+			}
+			_ = newFile.Close()
+			_ = file.Close()
 			//返回处理
 			s := dataMap[k]
 			if s != "" {
@@ -124,7 +123,9 @@ func UploadFileHandler(rootPath string, maxSize, singleSize int64) http.HandlerF
 				dataMap[k] = filePath
 			}
 		}
+
 		response.Code = common.ResponseOK
+		response.Data = dataMap
 		response.Msg = "文件上传成功！"
 		Render(w, *response)
 	})
