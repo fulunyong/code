@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/fulunyong/code/file"
 	"log"
 	"net/http"
@@ -18,6 +19,7 @@ func Test1(t *testing.T) {
 	log.Print("Server started on localhost:2080, use /upload for uploading files and /files/{fileName} for downloading files.")
 	serve := http.ListenAndServe(":2080", nil)
 	if serve != nil {
+		fmt.Println("服务关闭，执行相关操作！")
 		t.Fatal(serve)
 	}
 }
